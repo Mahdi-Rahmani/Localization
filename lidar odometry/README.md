@@ -1,5 +1,18 @@
 # Lidar odometry
 I develop a code that gets lidar scan in each frame as an input and then give us the position of the vehicle. The input scan is a point cloud. From each two consecutive scans we should find the relative displacement. Also we should use a point cloud registration algorithm for obtaining the relative transform matrix between two scans. Here we use ICP point cloud registration. 
+For this part first I see the examples of Carla. I use open3d_lidar.py as my base code. you can find it in [Base code](). Also after installing carla on your system, you can run this example code from directory that this simulator is installed. I recommend that you create a seperate environment and install dependencies and python libraries there. I use anaconda for this job and create an environment with the name of carla_test. First you should open a terminal and run carla server side:
+``` 
+cd C:\CARLA_0.9.12\WindowsNoEditor\
+conda activate carla_test
+CarlaUE4.exe -carla-rpc-port=3000
+```
+Becareful I use port=3000 because port=2000 isn't accessible in my computer but in default the carla server port is 2000 and also in examples clients send their requests on port=2000 so you should change them, too if it is needed and if you run above code in terminal. 
+Then open another terminal to run open3d_lidar.py in a client mode. For doing this you can run below codes.
+``` 
+cd C:\CARLA_0.9.12\WindowsNoEditor\PythonAPI\examples\ 
+conda activate carla_test
+python open3d_lidar.py
+``` 
 
 ## More about lidar odometry 
 Lidar odometry (LO) is a technique used in robotics and autonomous vehicles to estimate the motion of the vehicle by analyzing the data acquired by a Lidar sensor. Lidar sensors use laser beams to measure the distance between the sensor and the surrounding objects, producing a 3D point cloud of the environment. 
