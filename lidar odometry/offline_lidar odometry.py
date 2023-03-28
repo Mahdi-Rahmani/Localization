@@ -46,9 +46,16 @@ class OfflineLidarOdometry():
         self.lidar = None
 
         # odometry variables
+        self.scan_num = 500
         self.counter = 0
         self.pcls_list = []
         self.lidar_transform_list = []
+        self.T1 = None
+        self.T2 = None
+        self.T_rel_32 = None
+        self.pos_gt = []
+        self.pos_est = []
+
 
     def create_environment(self):
         client = carla.Client(host, port)
@@ -72,7 +79,7 @@ class OfflineLidarOdometry():
             self.vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
             self.vehicle.set_autopilot(no_autopilot)
 
-            lidar_bp = generate_lidar_bp(world, blueprint_library, delta)
+            lidar_bp = self.generate_lidar_bp(world, blueprint_library, delta)
             x = 0.0
             y = 0.0
             z = 0.0
@@ -80,7 +87,7 @@ class OfflineLidarOdometry():
             lidar_transform = carla.Transform(carla.Location(x=-0.5, z=1.8) + user_offset)
 
             self.lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=vehicle)
-            self.lidar.listen(lambda data: lidar_callback(data))
+            self.lidar.listen(lambda data: self.lidar_callback(data))
 
             frame = 0
             dt0 = datetime.now()
@@ -95,7 +102,7 @@ class OfflineLidarOdometry():
                 dt0 = datetime.now()
                 frame += 1
         finally:
-            #lidar_process()
+            self.locallization()
             world.apply_settings(original_settings)
             traffic_manager.set_synchronous_mode(False)
 
@@ -120,12 +127,63 @@ class OfflineLidarOdometry():
         lidar_bp.set_attribute('points_per_second', str(self.points_per_second))
         return lidar_bp
 
-    def lidar_callback(point_cloud):
+    def lidar_callback(self, point_cloud):
         """ This function is called after each lidar scan and we save
         pcls and lidar_transform in a list. lidar transform contains groud truth """
         self.counter +=1
-        if self.counter == 500:
+        if self.counter == self.scan_num:
             self.don_flag = False
         self.pcls_list.append(point_cloud)
         self.lidar_transform_list.append(self.lidar.get_transform())
+
+    def locallization(self):
+        odom_num = 0
+        for pcl in my_pcls:
+            odom_num += 1
+            self.odometry(pcl,odom_num)
+        
+    def odometry(self, point_cloud, odom_num):
+
+        data = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
+        data = np.reshape(data, (int(data.shape[0] / 4), 4))
+
+        # Isolate the 3D data
+        points = data[:, :-1]
+
+        # get lidar transform of current step
+        lidar_tran = self.lidar_transform[counter]
+        # find ground truth position of current step and save it in a list
+        self.pos_gt.append([lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z])
+
+        if odom_num == 1:
+            self.T1 = lidar_tran.get_matrix()
+            self.pos_est.append(self.pos_gt[0])
+
+        elif odom_num == 2:
+            self.T2 = lidar_tran.get_matrix()
+            self.pos_est.append(self.pos_gt[1])
+            
+            # We know that T2 = T1 * T_rel_21 so we can compute T_rel_21:
+            T_rel_21 = np.linalg.inv(self.T1) @ T2
+
+            # also from constant velocity assumption we have:
+            #   -->  T_rel_32 = T_rel_21
+            self.T_rel_32 = T_rel_21
+
+        elif 2<odom_num<self.scan_num:
+
+            T_rel = registration(points)
+            self.T_rel_32 = np.linalg.inv(T_rel)
+
+            T3 = T2 * self.T_rel_32
+
+            self.pos_est.append(np.ndarray.tolist(T3[:3,-1]))
+
+            self.T2 = T3
+        
+
+
+
+
+    
 
