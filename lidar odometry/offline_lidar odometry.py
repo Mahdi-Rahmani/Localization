@@ -97,4 +97,21 @@ class OfflineLidarOdometry():
             vehicle.destroy()
             lidar.destroy()
 
+    def generate_lidar_bp(self, world, blueprint_library, delta):
+        """Generates a CARLA blueprint based on the script parameters"""
+        lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
+        if self.no_noise:
+            lidar_bp.set_attribute('dropoff_general_rate', '0.0')
+            lidar_bp.set_attribute('dropoff_intensity_limit', '1.0')
+            lidar_bp.set_attribute('dropoff_zero_intensity', '0.0')
+        else:
+            lidar_bp.set_attribute('noise_stddev', '0.2')
+
+        lidar_bp.set_attribute('upper_fov', str(self.upper_fov))
+        lidar_bp.set_attribute('lower_fov', str(self.lower_fov))
+        lidar_bp.set_attribute('channels', str(self.channels))
+        lidar_bp.set_attribute('range', str(self.lidar_range))
+        lidar_bp.set_attribute('rotation_frequency', str(1.0 / self.delta))
+        lidar_bp.set_attribute('points_per_second', str(self.points_per_second))
+        return lidar_bp
 
