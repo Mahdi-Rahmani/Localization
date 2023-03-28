@@ -145,6 +145,7 @@ class OfflineLidarOdometry():
         for pcl in my_pcls:
             odom_num += 1
             self.odometry(pcl,odom_num)
+        self.plot_result(np.array(self.pos_est), np.array(self.pos_gt))
         
     def odometry(self, point_cloud, odom_num):
 
@@ -181,7 +182,7 @@ class OfflineLidarOdometry():
 
         elif 2<odom_num<self.scan_num:
 
-            T_rel = registration(points)
+            T_rel = self.registration(points)
             self.T_rel_32 = np.linalg.inv(T_rel)
 
             T3 = T2 * self.T_rel_32
@@ -210,4 +211,29 @@ class OfflineLidarOdometry():
         # The source we used here is a target for next iteration
         self.source = target
 
-        return reg_p2l.transformation                                                                
+        return reg_p2l.transformation        
+
+    def plot_result(self, est, gt):
+        xg=gt[:self.scan_num-1,0]
+        yg=gt[:self.scan_num-1,1]
+        zg=gt[:self.scan_num-1,2]
+
+        x=est[:self.scan_num-1,0]
+        y=est[:self.scan_num-1,1]
+        z=est[:self.scan_num-1,2]
+
+        
+        fig, axs = plt.subplots(3)
+        fig.suptitle('(1 scan) AND (no subsampling) gt=green and est=red')
+        axs[0].set_title('x-y')
+        axs[0].plot(x, y, '-or')
+        axs[0].plot(xg, yg, '-og')
+
+        axs[1].set_title('x-z')
+        axs[1].plot(x, z, '-or')
+        axs[1].plot(xg, zg, '-og')
+
+        axs[2].set_title('y-z')
+        axs[2].plot(y, z, '-or')
+        axs[2].plot(yg, zg, '-og')
+        plt.show()                                                       
