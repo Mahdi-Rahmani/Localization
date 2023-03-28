@@ -46,7 +46,7 @@ class OfflineLidarOdometry():
         self.lidar = None
 
         # odometry variables
-        self.scan_num = 500
+        self.scan_num = 50
         self.counter = 0
         self.pcls_list = []
         self.lidar_transform_list = []
@@ -60,9 +60,10 @@ class OfflineLidarOdometry():
         self.source = None
         self.threshold = 0.5
 
+        self.create_environment()
 
     def create_environment(self):
-        client = carla.Client(host, port)
+        client = carla.Client(self.host, self.port)
         client.set_timeout(2.0)
         world = client.get_world()
 
@@ -81,16 +82,16 @@ class OfflineLidarOdometry():
             vehicle_bp = blueprint_library.find(self.vehicle_name)
             vehicle_transform = random.choice(world.get_map().get_spawn_points())
             self.vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
-            self.vehicle.set_autopilot(no_autopilot)
+            self.vehicle.set_autopilot(self.no_autopilot)
 
-            lidar_bp = self.generate_lidar_bp(world, blueprint_library, delta)
+            lidar_bp = self.generate_lidar_bp(world, blueprint_library, self.delta)
             x = 0.0
             y = 0.0
             z = 0.0
             user_offset = carla.Location(x, y, z)
             lidar_transform = carla.Transform(carla.Location(x=-0.5, z=1.8) + user_offset)
 
-            self.lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=vehicle)
+            self.lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=self.vehicle)
             self.lidar.listen(lambda data: self.lidar_callback(data))
 
             frame = 0
@@ -110,8 +111,8 @@ class OfflineLidarOdometry():
             world.apply_settings(original_settings)
             traffic_manager.set_synchronous_mode(False)
 
-            vehicle.destroy()
-            lidar.destroy()
+            self.vehicle.destroy()
+            self.lidar.destroy()
 
     def generate_lidar_bp(self, world, blueprint_library, delta):
         """Generates a CARLA blueprint based on the script parameters"""
@@ -142,11 +143,13 @@ class OfflineLidarOdometry():
 
     def locallization(self):
         odom_num = 0
-        for pcl in my_pcls:
+        for pcl in self.pcls_list:
             odom_num += 1
+            if odom_num == len(self.pcls_list):
+                break
             self.odometry(pcl,odom_num)
         self.plot_result(np.array(self.pos_est), np.array(self.pos_gt))
-        
+
     def odometry(self, point_cloud, odom_num):
 
         data = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
@@ -155,16 +158,18 @@ class OfflineLidarOdometry():
         # Isolate the 3D data
         points = data[:, :-1]
 
-        # get lidar transform of current step
-        lidar_tran = self.lidar_transform[counter]
-        # find ground truth position of current step and save it in a list
-        self.pos_gt.append([lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z])
+        # w dont use first 10 scans because they may have alot of noise
+        if 10 <= odom_num:
+            # get lidar transform of current step
+            lidar_tran = self.lidar_transform_list[odom_num]
+            # find ground truth position of current step and save it in a list
+            self.pos_gt.append([lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z])
 
-        if odom_num == 1:
+        if odom_num == 10:
             self.T1 = lidar_tran.get_matrix()
             self.pos_est.append(self.pos_gt[0])
 
-        elif odom_num == 2:
+        elif odom_num == 11:
             self.T2 = lidar_tran.get_matrix()
             self.pos_est.append(self.pos_gt[1])
             
@@ -174,18 +179,18 @@ class OfflineLidarOdometry():
             self.source.points = o3d.utility.Vector3dVector(points)
 
             # We know that T2 = T1 * T_rel_21 so we can compute T_rel_21:
-            T_rel_21 = np.linalg.inv(self.T1) @ T2
+            T_rel_21 = np.linalg.inv(self.T1) @ self.T2
 
             # also from constant velocity assumption we have:
             #   -->  T_rel_32 = T_rel_21
             self.T_rel_32 = T_rel_21
 
-        elif 2<odom_num<self.scan_num:
+        elif 11<odom_num<self.scan_num:
 
             T_rel = self.registration(points)
             self.T_rel_32 = np.linalg.inv(T_rel)
 
-            T3 = T2 * self.T_rel_32
+            T3 = self.T2 @ self.T_rel_32
 
             self.pos_est.append(np.ndarray.tolist(T3[:3,-1]))
 
@@ -203,7 +208,7 @@ class OfflineLidarOdometry():
 
         # point to plane ICP registraion algorithm
         reg_p2l = o3d.pipelines.registration.registration_icp(
-        source, target_norm, threshold, trans_init,
+        self.source, target_norm, self.threshold, initial_transform,
         o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0000001,
                                                                         relative_rmse=0.0000001,
@@ -214,6 +219,8 @@ class OfflineLidarOdometry():
         return reg_p2l.transformation        
 
     def plot_result(self, est, gt):
+        print(gt)
+        print(est)
         xg=gt[:self.scan_num-1,0]
         yg=gt[:self.scan_num-1,1]
         zg=gt[:self.scan_num-1,2]
@@ -236,4 +243,11 @@ class OfflineLidarOdometry():
         axs[2].set_title('y-z')
         axs[2].plot(y, z, '-or')
         axs[2].plot(yg, zg, '-og')
-        plt.show()                                                       
+        plt.show()
+
+if __name__ == "__main__":
+
+    try:
+        OfflineLidarOdometry()
+    except KeyboardInterrupt:
+        print(' - Exited by user.')                                                      
