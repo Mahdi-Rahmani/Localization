@@ -45,6 +45,11 @@ class OfflineLidarOdometry():
         self.vehicle = None
         self.lidar = None
 
+        # odometry variables
+        self.counter = 0
+        self.pcls_list = []
+        self.lidar_transform_list = []
+
     def create_environment(self):
         client = carla.Client(host, port)
         client.set_timeout(2.0)
@@ -114,4 +119,13 @@ class OfflineLidarOdometry():
         lidar_bp.set_attribute('rotation_frequency', str(1.0 / self.delta))
         lidar_bp.set_attribute('points_per_second', str(self.points_per_second))
         return lidar_bp
+
+    def lidar_callback(point_cloud):
+        """ This function is called after each lidar scan and we save
+        pcls and lidar_transform in a list. lidar transform contains groud truth """
+        self.counter +=1
+        if self.counter == 500:
+            self.don_flag = False
+        self.pcls_list.append(point_cloud)
+        self.lidar_transform_list.append(self.lidar.get_transform())
 
