@@ -46,7 +46,7 @@ class OfflineLidarOdometry():
         self.lidar = None
 
         # odometry variables
-        self.scan_num = 50
+        self.scan_num = 100
         self.counter = 0
         self.pcls_list = []
         self.lidar_transform_list = []
@@ -58,7 +58,7 @@ class OfflineLidarOdometry():
 
         # registration variable
         self.source = None
-        self.threshold = 0.5
+        self.threshold = 0.4
 
         self.create_environment()
 
@@ -190,6 +190,8 @@ class OfflineLidarOdometry():
             T_rel = self.registration(points)
             self.T_rel_32 = np.linalg.inv(T_rel)
 
+            # T3 that transform scan3 to global coordinate is obtained by:
+            #   --->  T3 = T2 * T_rel_32
             T3 = self.T2 @ self.T_rel_32
 
             self.pos_est.append(np.ndarray.tolist(T3[:3,-1]))
@@ -230,19 +232,81 @@ class OfflineLidarOdometry():
         z=est[:self.scan_num-1,2]
 
         
-        fig, axs = plt.subplots(3)
-        fig.suptitle('(1 scan) AND (no subsampling) gt=green and est=red')
+        fig1, axs = plt.subplots(3)
+        fig1.suptitle('(1 scan) AND (no subsampling) gt=green and est=red')
+        fig1.subplots_adjust(hspace=0.7)
         axs[0].set_title('x-y')
         axs[0].plot(x, y, '-or')
         axs[0].plot(xg, yg, '-og')
+        axs[0].set_xlabel('X')
+        axs[0].set_ylabel('Y')
 
         axs[1].set_title('x-z')
         axs[1].plot(x, z, '-or')
         axs[1].plot(xg, zg, '-og')
+        axs[1].set_xlabel('X')
+        axs[1].set_ylabel('Z')
 
         axs[2].set_title('y-z')
         axs[2].plot(y, z, '-or')
         axs[2].plot(yg, zg, '-og')
+        axs[2].set_xlabel('Y')
+        axs[2].set_ylabel('Z')
+
+        fig2 = plt.figure(figsize=(8, 6))
+        ax = fig2.add_subplot(111, projection='3d')
+        ax.scatter(xg, yg, zg, c='green', linewidths=0.1)
+        ax.scatter(x, y, z, c='red',linewidths=0.1)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.view_init(elev=30, azim=120)
+        plt.show()
+
+    def plot_result2(self, est, gt):
+        print(gt)
+        print(est)
+        xg=gt[:self.scan_num-1,0]
+        yg=gt[:self.scan_num-1,1]
+        zg=gt[:self.scan_num-1,2]
+
+        x=est[:self.scan_num-1,0]
+        y=est[:self.scan_num-1,1]
+        z=est[:self.scan_num-1,2]
+
+        
+        fig = plt.figure(figsize=(10, 8))
+        ax1 = fig.add_subplot(2, 2, 1)
+        ax2 = fig.add_subplot(2, 2, 2)
+        ax3 = fig.add_subplot(2, 2, 3)
+        ax4 = fig.add_subplot(2, 2, 4, projection='3d')
+
+        fig.suptitle('(1 scan) AND (no subsampling) gt=green and est=red')
+
+        # Plot data in 2D views
+        ax1.scatter(xg, yg, c=zg, label='Ground Truth')
+        ax1.scatter(x, y, c=z, label='Estimated')
+        ax1.set_xlabel('X')
+        ax1.set_ylabel('Y')
+
+        ax2.scatter(xg, zg, c=yg, label='Ground Truth')
+        ax2.scatter(x, z, c=y, label='Estimated')
+        ax2.set_xlabel('X')
+        ax2.set_ylabel('Z')
+
+        ax3.scatter(yg, zg, c=xg, label='Ground Truth')
+        ax3.scatter(y, z, c=x, label='Estimated')
+        ax3.set_xlabel('Y')
+        ax3.set_ylabel('Z')
+
+        # Plot data in 3D views
+        ax4.scatter(xg, yg, zg, c=zg)
+        ax4.scatter(x, y, z, c=z)
+        ax4.set_xlabel('X')
+        ax4.set_ylabel('Y')
+        ax4.set_zlabel('Z')
+        ax4.view_init(elev=30, azim=120)
+
         plt.show()
 
 if __name__ == "__main__":
