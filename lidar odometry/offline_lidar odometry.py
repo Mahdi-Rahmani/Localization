@@ -56,6 +56,10 @@ class OfflineLidarOdometry():
         self.pos_gt = []
         self.pos_est = []
 
+        # registration variable
+        self.source = None
+        self.threshold = 0.5
+
 
     def create_environment(self):
         client = carla.Client(host, port)
@@ -163,6 +167,11 @@ class OfflineLidarOdometry():
             self.T2 = lidar_tran.get_matrix()
             self.pos_est.append(self.pos_gt[1])
             
+            # In this step we should save pointcloud as a source pointcloud 
+            # for registration algorithm that will be used in next step
+            self.source = o3d.geometry.PointCloud()
+            self.source.points = o3d.utility.Vector3dVector(points)
+
             # We know that T2 = T1 * T_rel_21 so we can compute T_rel_21:
             T_rel_21 = np.linalg.inv(self.T1) @ T2
 
@@ -180,10 +189,25 @@ class OfflineLidarOdometry():
             self.pos_est.append(np.ndarray.tolist(T3[:3,-1]))
 
             self.T2 = T3
-        
-
-
-
-
     
+    def registration(self, data):
+        # first we should prepare traget pcl
+        target = o3d.geometry.PointCloud()
+        target.points = o3d.utility.Vector3dVector(data)
+        target_norm = target
+        target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.9, max_nn=60))
 
+        # we should give an initial transform matrix to registration algorithm
+        initial_transform = self.T_rel_32
+
+        # point to plane ICP registraion algorithm
+        reg_p2l = o3d.pipelines.registration.registration_icp(
+        source, target_norm, threshold, trans_init,
+        o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+        criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0000001,
+                                                                        relative_rmse=0.0000001,
+                                                                        max_iteration=300))
+        # The source we used here is a target for next iteration
+        self.source = target
+
+        return reg_p2l.transformation                                                                
