@@ -46,7 +46,7 @@ class OfflineLidarOdometry():
         self.lidar = None
 
         # odometry variables
-        self.scan_num = 100
+        self.scan_num = 150
         self.counter = 0
         self.pcls_list = []
         self.lidar_transform_list = []
@@ -58,7 +58,12 @@ class OfflineLidarOdometry():
 
         # registration variable
         self.source = None
-        self.threshold = 0.4
+        # with down sampling
+        # self.voxel_size = 4
+        # self.threshold = 2
+        # without down sampling
+        self.voxel_size = 0
+        self.threshold = 1.3
 
         self.create_environment()
 
@@ -80,7 +85,8 @@ class OfflineLidarOdometry():
 
             blueprint_library = world.get_blueprint_library()
             vehicle_bp = blueprint_library.find(self.vehicle_name)
-            vehicle_transform = random.choice(world.get_map().get_spawn_points())
+            #vehicle_transform = random.choice(world.get_map().get_spawn_points())
+            vehicle_transform = world.get_map().get_spawn_points()[5]
             self.vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
             self.vehicle.set_autopilot(self.no_autopilot)
 
@@ -157,11 +163,13 @@ class OfflineLidarOdometry():
 
         # Isolate the 3D data
         points = data[:, :-1]
+        #points[:, 2] = -points[:, 2]
 
         # w dont use first 10 scans because they may have alot of noise
         if 10 <= odom_num:
             # get lidar transform of current step
-            lidar_tran = self.lidar_transform_list[odom_num]
+            # lidar_tran = self.lidar_transform_list[odom_num]
+            lidar_tran = point_cloud.transform
             # find ground truth position of current step and save it in a list
             self.pos_gt.append([lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z])
 
@@ -177,6 +185,8 @@ class OfflineLidarOdometry():
             # for registration algorithm that will be used in next step
             self.source = o3d.geometry.PointCloud()
             self.source.points = o3d.utility.Vector3dVector(points)
+            if self.voxel_size != 0:
+                self.source = self.source.voxel_down_sample(voxel_size= self.voxel_size)
 
             # We know that T2 = T1 * T_rel_21 so we can compute T_rel_21:
             T_rel_21 = np.linalg.inv(self.T1) @ self.T2
@@ -202,19 +212,37 @@ class OfflineLidarOdometry():
         # first we should prepare traget pcl
         target = o3d.geometry.PointCloud()
         target.points = o3d.utility.Vector3dVector(data)
-        target_norm = target
-        target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.9, max_nn=60))
+        target_norm = None
+        if self.voxel_size == 0:
+            # without down sampling
+            target_norm = target
+            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=1.2, max_nn=130))
+        else:
+            # with down sampling
+            target = target.voxel_down_sample(voxel_size= self.voxel_size)
+            target_norm = target
+            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=4, max_nn=20))
+
 
         # we should give an initial transform matrix to registration algorithm
-        initial_transform = self.T_rel_32
+        initial_transform = np.linalg.inv(self.T_rel_32)
+        # we dont have a lot of changes in z axis so we assume the relative z = 0
+        # initial_transform[2,3]=0
+        #initial_transform[2,:3]= [0,0,1]
+        #initial_transform[:2,2] = 0
+
+        # point to point ICP
+        '''reg_p2p = o3d.pipelines.registration.registration_icp(
+            self.source, target, self.threshold, initial_transform,
+            o3d.pipelines.registration.TransformationEstimationPointToPoint())'''
 
         # point to plane ICP registraion algorithm
         reg_p2l = o3d.pipelines.registration.registration_icp(
-        self.source, target_norm, self.threshold, initial_transform,
-        o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+        self.source, target_norm, self.threshold, init =initial_transform,
+        estimation_method= o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0000001,
                                                                         relative_rmse=0.0000001,
-                                                                        max_iteration=300))
+                                                                        max_iteration=200))
         # The source we used here is a target for next iteration
         self.source = target
 
@@ -246,12 +274,15 @@ class OfflineLidarOdometry():
         axs[1].plot(xg, zg, '-og')
         axs[1].set_xlabel('X')
         axs[1].set_ylabel('Z')
+        axs[1].set_ylim([1,3])
 
         axs[2].set_title('y-z')
         axs[2].plot(y, z, '-or')
         axs[2].plot(yg, zg, '-og')
         axs[2].set_xlabel('Y')
         axs[2].set_ylabel('Z')
+        axs[2].set_ylim([1,3])
+
 
         fig2 = plt.figure(figsize=(8, 6))
         ax = fig2.add_subplot(111, projection='3d')
