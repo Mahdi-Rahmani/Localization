@@ -28,6 +28,7 @@ from collections import OrderedDict
 from util import destroy_queue
 
 from lidar_odometry import LidarOdometry
+import open3d as o3d
 
 class Mechanism:
 
@@ -44,6 +45,8 @@ class Mechanism:
         self.channels = 64.0
         self.lidar_range = 100.0
         self.points_per_second = 1000000
+
+        self.delta = 0.1 
 
         # bluprints those added to carla
         # vehicle
@@ -110,20 +113,23 @@ class Mechanism:
             :type frame: int
         """
         sensors = {'lidar': None}
-
         while not self.lidar_queue.empty():
             # lidar data is point cloud
             lidar_data = self.lidar_queue.get()
-        
-            if lidar_data.frame == frame:
+            #print("frame: ", frame, "lidar frame: ", lidar_data.frame)
+            if lidar_data.frame+1 == frame:
+                #print("KKKKKKKKKKKKKKKKKKKKKKKKK")
                 # the output of lidar odometry is [x, y, z] which is estimated
-                sensors['lidar'] = self.lidar_odom.odometry(lidar_data)
-
+                data = np.copy(np.frombuffer(lidar_data.raw_data, dtype=np.dtype('f4')))
+                data = np.reshape(data, (int(data.shape[0] / 4), 4))
+                pose = self.lidar_odom.odometry(lidar_data)
+                sensors['lidar'] = pose
+                #sensors['lidar'] = [0, 1, 2]
                 self.lidar_queue.task_done()
                 break
 
             self.lidar_queue.task_done()
-
+        #print(sensors)
         return sensors
          
 

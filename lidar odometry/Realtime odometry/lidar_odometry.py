@@ -18,8 +18,8 @@ class LidarOdometry:
         # registration variable
         self.source = None
         # with down sampling
-        self.voxel_size = 4
-        self.threshold = 2
+        self.voxel_size = 0.5
+        self.threshold = 1.3
 
     def odometry(self, point_cloud):
         
@@ -29,6 +29,7 @@ class LidarOdometry:
 
         # Isolate the 3D data
         points = data[:, :-1]
+        points = self.filter_points_fast(points)
         #points[:, 2] = -points[:, 2]
 
         # w dont use first 10 scans because they may have alot of noise
@@ -74,20 +75,36 @@ class LidarOdometry:
             self.T2 = T3
             return np.ndarray.tolist(T3[:3,-1])
     
+    def filter_points_fast(self, points_array):
+        # non-ground selection
+        z_condition = np.logical_and(points_array[:, 2] > -0.2, points_array[:, 2] < 0.3)
+        x_condition = np.logical_and(points_array[:, 0] > -25, points_array[:, 0] < 20)
+        filtered_indices = np.logical_and(z_condition, x_condition)
+        
+        y_condition2 = np.logical_or(points_array[:, 1] <= -1.2, points_array[:, 1] >= 1.2)
+        x_condition2 = np.logical_or(points_array[:, 0] <= -2.8, points_array[:, 0] >= 2)
+        exclude_condition = np.logical_or(y_condition2, x_condition2)
+        
+        filtered_indices = np.logical_and(exclude_condition, filtered_indices)
+        
+        filtered_points = points_array[filtered_indices]
+        return filtered_points
+
     def registration(self, data):
         # first we should prepare traget pcl
         target = o3d.geometry.PointCloud()
         target.points = o3d.utility.Vector3dVector(data)
+        #print("####len222###:", len(data[:, :-1]))
         target_norm = None
         if self.voxel_size == 0:
             # without down sampling
             target_norm = target
-            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=1.2, max_nn=130))
+            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.8, max_nn=10))
         else:
             # with down sampling
             target = target.voxel_down_sample(voxel_size= self.voxel_size)
             target_norm = target
-            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=4, max_nn=20))
+            target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=1.15, max_nn=10))
 
 
         # we should give an initial transform matrix to registration algorithm
@@ -98,10 +115,23 @@ class LidarOdometry:
         self.source, target_norm, self.threshold, init =initial_transform,
         estimation_method= o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0000001,
-                                                                        relative_rmse=0.0000001,
-                                                                        max_iteration=200))
+                                                                        relative_rmse=0.01,
+                                                                        max_iteration=300))
         # The source we used here is a target for next iteration
         self.source = target
 
         return reg_p2l.transformation
     
+    '''def sampling(self, pcd):
+        # Estimate the ground plane using RANSAC
+        plane_model, inliers = pcd.segment_plane(distance_threshold=0.01, ransac_n=3, num_iterations=1000)
+
+        # Extract ground points
+        ground_points = pcd.select_by_index(inliers)
+
+        # Remove ground points from the point cloud
+        non_ground_points = pcd.select_by_index(inliers, invert=True)
+
+        non_ground_points = non_ground_points.voxel_down_sample(voxel_size= self.voxel_size)
+
+        return non_ground_points'''

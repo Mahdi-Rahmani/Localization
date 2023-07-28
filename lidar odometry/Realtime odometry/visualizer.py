@@ -87,7 +87,7 @@ def visualizer(visual_msg_queue, quit):
 
     while True: # not quit.value:
         if visual_msg_queue.empty():
-            time.sleep(0.01)
+            time.sleep(0.05)
             continue
         
         msg = visual_msg_queue.get()
@@ -98,9 +98,10 @@ def visualizer(visual_msg_queue, quit):
             gt_pos = msg['gt_traj']
             add_to_traj(gt_traj_x, gt_traj_y, gt_traj_z, gt_pos[0], gt_pos[1], gt_pos[2], max_traj_len)
             updated_traj = True
-        if msg.get('est_traj') is not None:
+        
+        if msg.get('est_traj') is not None and len(msg.get('est_traj'))!=0:
             est_pos = msg['est_traj']
-            add_to_traj(est_traj_x, est_traj_y, est_traj_z, est_pos[0], est_pos[1], est_pos[2], max_traj_len)
+            add_to_traj(est_traj_x, est_traj_y, est_traj_z, est_pos[0], est_pos[1], est_pos[2]-2.15, max_traj_len)
             updated_traj = True
 
         # Visualize vehicle trajectory
@@ -110,7 +111,7 @@ def visualizer(visual_msg_queue, quit):
 
             # Update plot
             pose_plot.plot(gt_traj_x, gt_traj_y, gt_traj_z, color='green', linestyle='solid', label='GT')
-            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='blue', linestyle='solid', label='est')
+            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='red', linestyle='solid', label='est')
             pose_plot.legend(fontsize=fontsize)
         
         # flush any pending GUI events, re-painting the screen if needed

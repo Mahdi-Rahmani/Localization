@@ -9,7 +9,7 @@ import numpy as np
 import math
 
 # libraries related to visualization
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 from util import destroy_queue
 from ctypes import c_bool
 
@@ -33,10 +33,9 @@ class OfflineLidarOdometry():
         self.port = 3000
 
         # settings of simulation
-        self.delta = 0.1 
         self.no_rendering = False
         self.don_flag = True
-
+        self.delta = 0.1
         # visualization parameters
         # visual message
         self.visual_msg = dict()
@@ -52,6 +51,13 @@ class OfflineLidarOdometry():
 
             # Create World and Mechanism
             world = client.get_world()
+
+            original_settings = world.get_settings()
+            settings = world.get_settings()
+            settings.fixed_delta_seconds = self.delta
+            settings.synchronous_mode = True
+            settings.no_rendering_mode = False
+            world.apply_settings(settings)
             #vehicle_transform = random.choice(world.get_map().get_spawn_points())
             mechanism_transform = world.get_map().get_spawn_points()[5]
             mechanism = Mechanism(world, client, mechanism_transform)
@@ -66,11 +72,12 @@ class OfflineLidarOdometry():
 
             # In case Matplotlib is not able to keep up the pace of the growing queue,
             # we have to limit the rate of the items being pushed into the queue
-            visual_fps = 3
+            visual_fps = 10
             last_ts = time.time()
 
             while True:
                 # # This can fix Open3D jittering issues:
+                time.sleep(0.005)
                 world.tick()
                 frame = world.get_snapshot().frame
 
@@ -92,9 +99,10 @@ class OfflineLidarOdometry():
                 visual_msg['gt_traj'] = [gt_location.x, gt_location.y, gt_location.z] # round(x, 1)
 
                 # Get estimated location
+                visual_msg['est_traj'] = []
                 if sensors['lidar'] is not None:
-                    visual_msg['est_traj'] = sensors
-
+                    visual_msg['est_traj'] = sensors['lidar']
+                # print(visual_msg['est_traj'])
                 visual_msg_queue.put(visual_msg)
 
                 
@@ -105,6 +113,8 @@ class OfflineLidarOdometry():
 
             print('destroying the Mechanism object')
             mechanism.destroy()
+
+            world.apply_settings(original_settings)
 
             print('done')       
 
