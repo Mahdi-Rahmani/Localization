@@ -1,4 +1,3 @@
-from matplotlib.pyplot import axis
 import numpy as np
 
 from rotations import Quaternion, omega, skew_symmetric, angle_normalize
@@ -29,15 +28,13 @@ class ExtendedKalmanFilter:
         # dead-reckoning)
         self.last_ts = 0
 
-        # Gravity
-        self.g = np.array([0, 0, -9.81]).reshape(3, 1)
-
         # Sensor noise variances
         self.var_imu_acc = 0.01
         self.var_imu_gyro = 0.01
 
         # Motion model noise
         self.gnss_var = 100
+        self.lidar_var = 0.1
 
         # Motion model noise Jacobian
         self.L_jacobian = np.zeros([9, 6])
@@ -63,7 +60,7 @@ class ExtendedKalmanFilter:
         if not self:
             return
 
-        gnss_xyz = self.gnss.sensor_callback(gnss_data)
+        gnss_xyz = self.gnss.get_xyz(gnss_data)
         if self.initialized:
             self.measurement_correction(gnss_xyz, self.gnss_var)
         else:
@@ -87,9 +84,9 @@ class ExtendedKalmanFilter:
             return
 
         if self.initialized:
-            self.imu_prediction(imu_data)
-        else:
-            self.imu_obj.set_last_ts(imu_data)
+            self.lidar_obj.create_transform(self.p, self.q.to_mat())
+            xyz = self.lidar_obj.lidar_odometry(lidar_data)
+            self.measurement_correction(xyz, self.lidar_var)
 
     def initialize_pose(self, gnss_xyz, samples_to_use=10):
         """Initialize the vehicle state using gnss sensor
@@ -123,12 +120,6 @@ class ExtendedKalmanFilter:
             self.initialized = True
 
     def measurement_correction(self, xyz, sensor_var):
-        """Given the estimated global location by gnss, correct
-        the vehicle state
-
-        :param gnss: global xyz position
-        :type x: Gnss class (see mechanism.py)
-        """
         # Global position
         x, y, z = xyz
 
@@ -151,10 +142,10 @@ class ExtendedKalmanFilter:
 
     def imu_prediction(self, imu_data):
         self.p, self.v, self.q, self.p_cov = self.imu_obj.imu_odometry(imu_data, self.p, self.v, self.q, self.p_cov, self.L_jacobian)
+        
     
     def get_location(self):
         """Return the estimated vehicle location
-
         :return: x, y, z position
         :rtype: list
         """
