@@ -30,9 +30,6 @@ class GNSS:
         self.gnss_lat_ref, self.gnss_long_ref = self._get_latlon_ref()
 
 
-    def get_gnss(self):
-        return self.gnss
-
     def generate_GNSS_bp(self, blueprint_library):
         """Generates a CARLA blueprint based on the script parameters"""
         # Sensor noise profile 
@@ -59,13 +56,12 @@ class GNSS:
 
         return gnss_bp
     
-    def sensor_callback(self, gnss_data):
+    def get_xyz(self, gnss_data):
         altitude = gnss_data.altitude
         latitude = gnss_data.latitude
         longitude = gnss_data.longitude
 
         return self.gnss_to_xyz(latitude, longitude, altitude)
-
 
 
     def gnss_to_xyz(self, latitude, longitude, altitude):

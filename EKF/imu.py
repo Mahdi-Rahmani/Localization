@@ -17,7 +17,8 @@ class IMU:
 
         # imu timestamp
         self.last_ts = 0
-        
+
+        # Gravity
         self.g = np.array([0, 0, -9.81]).reshape(3, 1)
 
         #gnss blueprint
@@ -27,7 +28,7 @@ class IMU:
         self.imu = self.world.spawn_actor(
             blueprint=imu_bp,
             transform=imu_transform,
-            attach_to=self.vehicle
+            attach_to=vehicle
         )
 
     def generate_IMU_bp(self, blueprint_library):
@@ -102,3 +103,6 @@ class IMU:
         Q[3:, 3:] *= delta_t * delta_t * self.var_imu_gyro
 
         return Q
+    
+    def destroy(self):
+        self.imu.destroy()
