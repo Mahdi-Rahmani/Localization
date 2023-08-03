@@ -9,7 +9,7 @@ class GNSS:
         # GNSS parameters
         self.NOISE_STDDEV = 5e-5
         self.NOISE_BIAS = 1e-5
-        self.GNSS_FREQ = 2
+        self.GNSS_FREQ = 5
 
         # vehicle position obtained by GNSS
         self.x = None

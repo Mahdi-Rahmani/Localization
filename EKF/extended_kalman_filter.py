@@ -1,6 +1,7 @@
 import numpy as np
 
 from rotations import Quaternion, omega, skew_symmetric, angle_normalize
+import weakref
 
 class ExtendedKalmanFilter:
     def __init__(self, lidar_obj, gnss_obj, imu_obj):
@@ -34,7 +35,7 @@ class ExtendedKalmanFilter:
 
         # Motion model noise
         self.gnss_var = 100
-        self.lidar_var = 0.1
+        self.lidar_var = 30
 
         # Motion model noise Jacobian
         self.L_jacobian = np.zeros([9, 6])
@@ -60,7 +61,7 @@ class ExtendedKalmanFilter:
         if not self:
             return
 
-        gnss_xyz = self.gnss.get_xyz(gnss_data)
+        gnss_xyz = self.gnss_obj.get_xyz(gnss_data)
         if self.initialized:
             self.measurement_correction(gnss_xyz, self.gnss_var)
         else:
@@ -84,9 +85,10 @@ class ExtendedKalmanFilter:
             return
 
         if self.initialized:
-            self.lidar_obj.create_transform(self.p, self.q.to_mat())
+            self.lidar_obj.create_transform(self.p.reshape(-1), Quaternion(*self.q).to_mat())
             xyz = self.lidar_obj.lidar_odometry(lidar_data)
-            self.measurement_correction(xyz, self.lidar_var)
+            if xyz != None:
+                self.measurement_correction(xyz, self.lidar_var)
 
     def initialize_pose(self, gnss_xyz, samples_to_use=10):
         """Initialize the vehicle state using gnss sensor
@@ -116,7 +118,7 @@ class ExtendedKalmanFilter:
             self.gnss_init_xyz /= samples_to_use
             self.p[:, 0] = self.gnss_init_xyz
             self.q[:, 0] = Quaternion().to_numpy()
-
+            print("Initialized pointtttttttt:",self.gnss_init_xyz )
             self.initialized = True
 
     def measurement_correction(self, xyz, sensor_var):

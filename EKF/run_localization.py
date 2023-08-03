@@ -39,15 +39,13 @@ def main():
 
         # create vehicle and its sensors
         blueprint_library = world.get_blueprint_library()
-        # starting poit of vehicle
-        vehicle_transform = world.get_map().get_spawn_points()[5]
         # create vehicle
-        vehicle = Vehicle(world, blueprint_library)
+        vehicle_obj = Vehicle(world, blueprint_library)
         # cretae sensors
-        lidar_obj = LIDAR(world, vehicle, blueprint_library, carla.Transform(carla.Location(x=-0.5, z=1.8)))
-        gnss_obj = GNSS(world, vehicle, blueprint_library, carla.Transform(carla.Location(x=0, z=0)))
-        imu_obj = IMU(world, vehicle, blueprint_library, carla.Transform(carla.Location(x=0, z=0)))
-
+        lidar_obj = LIDAR(world, vehicle_obj.vehicle, blueprint_library, carla.Transform(carla.Location(x=-0.5, z=1.8)))
+        gnss_obj = GNSS(world, vehicle_obj.vehicle, blueprint_library, carla.Transform(carla.Location(x=0, z=0)))
+        imu_obj = IMU(world, vehicle_obj.vehicle, blueprint_library, carla.Transform(carla.Location(x=0, z=0)))
+        actor_list = [vehicle_obj.vehicle, lidar_obj.lidar, gnss_obj.gnss, imu_obj.imu]
         print('Vehicle and Sensors are created.')
 
         # EKF
@@ -60,6 +58,16 @@ def main():
         proc.daemon = True
         proc.start()
 
+        original_settings = world.get_settings()
+        settings = world.get_settings()
+        settings.fixed_delta_seconds = 0.1
+        settings.synchronous_mode = True
+        settings.no_rendering_mode = False
+        world.apply_settings(settings)
+        '''settings.fixed_delta_seconds = 0.03
+        settings.synchronous_mode = True
+        settings.no_rendering_mode = False
+        world.apply_settings(settings)'''
         # In case Matplotlib is not able to keep up the pace of the growing queue,
         # we have to limit the rate of the items being pushed into the queue
         visual_fps = 3
@@ -67,13 +75,14 @@ def main():
 
         # Drive the car around and get sensor readings
         while True:
+            time.sleep(0.005)
             world.tick()
             #frame = world.get_snapshot().frame
             
             # EKF initialization
             # Don't run anything else before EKF is initialized
             if ekf.initialized:
-                vehicle.set_autopilot_status(True)
+                vehicle_obj.set_autopilot_status(True)
             else:
                 continue
 
@@ -88,7 +97,7 @@ def main():
             visual_msg = dict()
 
             # Get ground truth vehicle location
-            gt_location = car.get_location()
+            gt_location = vehicle_obj.get_location()
             visual_msg['gt_traj'] = [gt_location.x, gt_location.y, gt_location.z] # round(x, 1)
 
             # Get estimated location
@@ -105,8 +114,12 @@ def main():
         lidar_obj.destroy()
         gnss_obj.destroy()
         imu_obj.destroy()
-        vehicle.destroy()
+        vehicle_obj.destroy()
 
+        client.apply_batch([carla.command.DestroyActor(x) 
+            for x in actor_list if x is not None])
+
+        world.apply_settings(original_settings)
         print('done')
 
 

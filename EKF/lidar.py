@@ -28,7 +28,11 @@ class LIDAR:
         self.T_rel_32 = None
         self.pos_gt = []
         self.pos_est = []
-
+        #newwwwwwwwwwwwwwww
+        self.p = None
+        self.p_prev = None
+        self.R_01 = None
+        self.T_12 = None
         # registration variable
         self.source = None
         self.threshold = 1.3
@@ -53,7 +57,7 @@ class LIDAR:
         lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
 
         # set parameters
-        if no_noise:
+        if self.no_noise:
             lidar_bp.set_attribute('dropoff_general_rate', '0.0')
             lidar_bp.set_attribute('dropoff_intensity_limit', '1.0')
             lidar_bp.set_attribute('dropoff_zero_intensity', '0.0')
@@ -94,6 +98,7 @@ class LIDAR:
         data = np.reshape(data, (int(data.shape[0] / 4), 4))
 
         points = data[:, :-1]
+        print("pointssssssssssssssss",len(points))
         points = self.filter_points_fast(points)
 
         if self.counter == 1:
@@ -101,6 +106,7 @@ class LIDAR:
             self.source.points = o3d.utility.Vector3dVector(points)
             if self.voxel_size != 0:
                 self.source = self.source.voxel_down_sample(voxel_size= self.voxel_size)
+            return None
         else:
             # first we should prepare traget pcl
             target = o3d.geometry.PointCloud()
@@ -115,8 +121,8 @@ class LIDAR:
                 target = target.voxel_down_sample(voxel_size= self.voxel_size)
                 target_norm = target
                 target_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=1.15, max_nn=10))
-
             T_12_optimized = self.registration(target_norm)
+            self.source = target
             new_xyz = self.p + T_12_optimized[:3,3]
 
             return new_xyz.tolist()
@@ -147,8 +153,8 @@ class LIDAR:
         criteria = o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=0.0000001,
                                                                         relative_rmse=0.01,
                                                                         max_iteration=300))
-        T_12 = np.linalg.inv(reg_p2l.transformation)
-        return T_12
+        my_T_12 = np.linalg.inv(reg_p2l.transformation)
+        return my_T_12
 
     def destroy(self):
         self.lidar.destroy()
