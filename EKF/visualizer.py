@@ -58,12 +58,10 @@ def add_to_traj(traj_x, traj_y, traj_z, x, y, z, max_len, min_dist=0.1):
 def visualizer(visual_msg_queue, quit):
     # Setup layout
     fig = plt.figure(figsize=(16, 9), dpi=120, facecolor=(0.6, 0.6, 0.6))
-    gs = gridspec.GridSpec(4, 5)
-    pose_plot = fig.add_subplot(gs[:, :], projection='3d', facecolor=(1.0, 1.0, 1.0))
-    pose_plot.title.set_text('Position')
+    pose_plot = fig.add_subplot(111, projection='3d', facecolor=(1.0, 1.0, 1.0))
+    # Set the title of the plot
+    fig.suptitle('EKF on Lidar & GNSS & IMU', fontsize=16)
 
-    # Expand the plot when needed
-    pose_plot.autoscale()
 
     # Trajectory length limit
     # Would remove the oldest point as soon as the list reaches the maximum length (sliding window)

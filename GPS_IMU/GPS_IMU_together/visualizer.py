@@ -5,7 +5,6 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.mplot3d import Axes3D
-
 import time
 import math
 
@@ -58,9 +57,9 @@ def add_to_traj(traj_x, traj_y, traj_z, x, y, z, max_len, min_dist=0.1):
 def visualizer(visual_msg_queue, quit):
     # Setup layout
     fig = plt.figure(figsize=(16, 9), dpi=120, facecolor=(0.6, 0.6, 0.6))
-    gs = gridspec.GridSpec(4, 5)
-    pose_plot = fig.add_subplot(gs[:, :], projection='3d', facecolor=(1.0, 1.0, 1.0))
-    pose_plot.title.set_text('Position')
+    pose_plot = fig.add_subplot(111, projection='3d', facecolor=(1.0, 1.0, 1.0))
+    # Set the title of the plot
+    fig.suptitle('EKF on IMU & GNSS', fontsize=16)
 
     # Expand the plot when needed
     pose_plot.autoscale()
@@ -78,10 +77,8 @@ def visualizer(visual_msg_queue, quit):
     est_traj_z = []
 
     t = 0
-
     # Font size
     fontsize = 14
-
     # make sure the window is raised, but the script keeps going
     plt.show(block=False)
 
@@ -110,9 +107,17 @@ def visualizer(visual_msg_queue, quit):
             pose_plot.cla()
 
             # Update plot
-            pose_plot.plot(gt_traj_x, gt_traj_y, gt_traj_z, color='green', linestyle='solid', label='GT')
-            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='red', linestyle='solid', label='est')
+            pose_plot.plot(gt_traj_x, gt_traj_y, gt_traj_z, color='green', linestyle='solid', label='Ground Truth')
+            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='red', linestyle='solid', label='Estimated')
             pose_plot.legend(fontsize=fontsize)
+
+            # Set the title again (workaround to show title)
+            fig.suptitle('EKF on IMU & GNSS', fontsize=16)
+
+            # Set axis limits manually to control the initial view and zooming
+            pose_plot.set_xlim(min(gt_traj_x + est_traj_x), max(gt_traj_x + est_traj_x))
+            pose_plot.set_ylim(min(gt_traj_y + est_traj_y), max(gt_traj_y + est_traj_y))
+            pose_plot.set_zlim(min(gt_traj_z + est_traj_z), max(gt_traj_z + est_traj_z))
         
         # flush any pending GUI events, re-painting the screen if needed
         fig.canvas.flush_events()

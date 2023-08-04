@@ -1,12 +1,4 @@
 
-'''
-    The vehicle class contains vehicle and its attached sensors. We create 
-    these blueprints here and also implement their callbacks.
-    According to sensor frequency when we get data from that sensor then 
-    sensor's callback is called and data is pushed into a queue.
-
-    Author: Mahdi Rahmani
-'''
 import glob
 import os
 import sys
@@ -106,12 +98,6 @@ class Mechanism:
         
 
     def get_sensor_readings(self, frame):
-        """Return a dict containing the sensor readings
-            at the particular frame
-
-            :param frame: unique frame at the current world frame
-            :type frame: int
-        """
         sensors = {'lidar': None}
         while not self.lidar_queue.empty():
             # lidar data is point cloud

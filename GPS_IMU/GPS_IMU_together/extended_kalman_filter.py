@@ -33,7 +33,7 @@ class ExtendedKalmanFilter:
         self.var_imu_acc = 0.01
         self.var_imu_gyro = 0.01
         # Motion model noise
-        self.gnss_var = 100
+        self.gnss_var = 80
 
         # Motion model noise Jacobian
         self.L_jacobian = np.zeros([9, 6])
@@ -91,6 +91,16 @@ class ExtendedKalmanFilter:
             self.p[:, 0] = self.gnss_init_xyz
             self.q[:, 0] = Quaternion().to_numpy()
             
+            '''
+            vel = self.vehicle_obj.get_velocity()
+            self.v[:, 0] = np.array([vel.x, vel.y, vel.z])
+
+            rotation = self.vehicle_obj.get_T().rotation
+            roll = rotation.roll
+            pitch = rotation.pitch
+            yaw = rotation.yaw
+            self.q[:, 0] = Quaternion(euler=[roll, pitch, yaw]).to_numpy()'''
+            #print("Initialized pointtttttttt:",self.gnss_init_xyz )
             self.initialized = True
 
     def measurement_correction(self, xyz, sensor_var):

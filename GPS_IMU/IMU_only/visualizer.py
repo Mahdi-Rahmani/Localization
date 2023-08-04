@@ -58,12 +58,9 @@ def add_to_traj(traj_x, traj_y, traj_z, x, y, z, max_len, min_dist=0.1):
 def visualizer(visual_msg_queue, quit):
     # Setup layout
     fig = plt.figure(figsize=(16, 9), dpi=120, facecolor=(0.6, 0.6, 0.6))
-    gs = gridspec.GridSpec(4, 5)
-    pose_plot = fig.add_subplot(gs[:, :], projection='3d', facecolor=(1.0, 1.0, 1.0))
-    pose_plot.title.set_text('Position')
-
-    # Expand the plot when needed
-    pose_plot.autoscale()
+    pose_plot = fig.add_subplot(111, projection='3d', facecolor=(1.0, 1.0, 1.0))
+    # Set the title of the plot
+    fig.suptitle('IMU', fontsize=16)
 
     # Trajectory length limit
     # Would remove the oldest point as soon as the list reaches the maximum length (sliding window)
@@ -110,8 +107,8 @@ def visualizer(visual_msg_queue, quit):
             pose_plot.cla()
 
             # Update plot
-            pose_plot.plot(gt_traj_x, gt_traj_y, gt_traj_z, color='green', linestyle='solid', label='GT')
-            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='red', linestyle='solid', label='est')
+            pose_plot.plot(gt_traj_x, gt_traj_y, gt_traj_z, color='green', linestyle='solid', label='Ground Truth')
+            pose_plot.plot(est_traj_x, est_traj_y, est_traj_z, color='red', linestyle='solid', label='Estimated')
             pose_plot.legend(fontsize=fontsize)
         
         # flush any pending GUI events, re-painting the screen if needed

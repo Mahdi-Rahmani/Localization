@@ -18,7 +18,6 @@ from multiprocessing import Queue, Value, Process
 from ctypes import c_bool
 
 from vehicle import Vehicle
-from lidar import LIDAR
 from gnss import GNSS
 from imu import IMU
 
@@ -48,7 +47,7 @@ def main():
         print('Vehicle and Sensors are created.')
 
         # EKF
-        ekf = ExtendedKalmanFilter(lidar_obj, gnss_obj, imu_obj, vehicle_obj)
+        ekf = ExtendedKalmanFilter(gnss_obj, imu_obj, vehicle_obj)
 
         # Visualizer
         visual_msg_queue = Queue()
@@ -59,10 +58,11 @@ def main():
 
         original_settings = world.get_settings()
         settings = world.get_settings()
-        settings.fixed_delta_seconds = 0.1
+        settings.fixed_delta_seconds = 0.015
         settings.synchronous_mode = True
-        settings.no_rendering_mode = False
+        #settings.no_rendering_mode = False
         world.apply_settings(settings)
+
         '''settings.fixed_delta_seconds = 0.03
         settings.synchronous_mode = True
         settings.no_rendering_mode = False
@@ -72,17 +72,16 @@ def main():
         visual_fps = 3
         last_ts = time.time()
 
+        auto_pilot_counter = 0
         # Drive the car around and get sensor readings
         while True:
-            time.sleep(0.005)
+            #time.sleep(0.005)
             world.tick()
             #frame = world.get_snapshot().frame
             
             # EKF initialization
             # Don't run anything else before EKF is initialized
-            if ekf.initialized:
-                vehicle_obj.set_autopilot_status(True)
-            else:
+            if not ekf.initialized:
                 continue
 
             # Limit the visualization frame-rate
@@ -103,6 +102,10 @@ def main():
             visual_msg['est_traj'] = ekf.get_location()          
 
             visual_msg_queue.put(visual_msg)
+            auto_pilot_counter += 1
+            if auto_pilot_counter == 100:
+                vehicle_obj.set_autopilot_status(True)
+
 
     finally:
         print('Exiting visualizer')
