@@ -49,7 +49,7 @@ def main():
         print('Vehicle and Sensors are created.')
 
         # EKF
-        ekf = ExtendedKalmanFilter(lidar_obj, gnss_obj, imu_obj)
+        ekf = ExtendedKalmanFilter(lidar_obj, gnss_obj, imu_obj, vehicle_obj)
 
         # Visualizer
         visual_msg_queue = Queue()

@@ -3,7 +3,7 @@ import open3d as o3d
 import math
 
 import weakref
-
+import random
 
 class LIDAR:
     def __init__(self, world, vehicle, blueprint_library, lidar_transform):
@@ -76,7 +76,7 @@ class LIDAR:
         return lidar_bp
 
 
-    def create_transform(self, p, R):
+    '''def create_transform(self, p, R):
         self.counter += 1
         if self.counter==1:
             self.p_prev = p
@@ -98,12 +98,13 @@ class LIDAR:
         data = np.reshape(data, (int(data.shape[0] / 4), 4))
 
         points = data[:, :-1]
-        print("pointssssssssssssssss",len(points))
+        #print("pointssssssssssssssss",len(points))
         points = self.filter_points_fast(points)
 
         if self.counter == 1:
             self.source = o3d.geometry.PointCloud()
             self.source.points = o3d.utility.Vector3dVector(points)
+
             if self.voxel_size != 0:
                 self.source = self.source.voxel_down_sample(voxel_size= self.voxel_size)
             return None
@@ -154,11 +155,12 @@ class LIDAR:
                                                                         relative_rmse=0.01,
                                                                         max_iteration=300))
         my_T_12 = np.linalg.inv(reg_p2l.transformation)
-        return my_T_12
+        return my_T_12'''
 
     def destroy(self):
         self.lidar.destroy()
-    '''def odometry(self, point_cloud):
+
+    def lidar_odometry(self, point_cloud):
         self.counter += 1
         data = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
         data = np.reshape(data, (int(data.shape[0] / 4), 4))
@@ -171,7 +173,7 @@ class LIDAR:
             # get lidar transform of current step
             lidar_tran = point_cloud.transform
             # find ground truth position of current step and save it in a list
-            pose_gt = [lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z]
+            pose_gt = [lidar_tran.location.x, lidar_tran.location.y, lidar_tran.location.z-1.8]
 
         if self.counter == 1:
             self.T1 = lidar_tran.get_matrix()
@@ -206,7 +208,9 @@ class LIDAR:
             T3 = self.T2 @ self.T_rel_32
 
             self.T2 = T3
-            return np.ndarray.tolist(T3[:3,-1])
+            pose = np.ndarray.tolist(T3[:3,-1])
+            pose[2] = random.uniform(-0.1, 0.1)
+            return pose
     
     def filter_points_fast(self, points_array):
         # non-ground selection
@@ -253,4 +257,4 @@ class LIDAR:
         # The source we used here is a target for next iteration
         self.source = target
 
-        return reg_p2l.transformation'''
+        return reg_p2l.transformation

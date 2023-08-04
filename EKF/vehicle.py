@@ -18,4 +18,9 @@ class Vehicle:
     def get_location(self):
         return self.vehicle.get_location()    
         
-
+    def get_T(self):
+        return self.vehicle.get_transform()
+    
+    def get_velocity(self):
+        return self.vehicle.get_velocity()
+    

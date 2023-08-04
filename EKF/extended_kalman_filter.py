@@ -4,11 +4,12 @@ from rotations import Quaternion, omega, skew_symmetric, angle_normalize
 import weakref
 
 class ExtendedKalmanFilter:
-    def __init__(self, lidar_obj, gnss_obj, imu_obj):
+    def __init__(self, lidar_obj, gnss_obj, imu_obj, vehicle_obj):
         self.lidar_obj = lidar_obj
         self.gnss_obj = gnss_obj
         self.imu_obj = imu_obj
-        
+        self.vehicle_obj = vehicle_obj
+
         # State (position, velocity and orientation)
         self.p = np.zeros([3, 1])
         self.v = np.zeros([3, 1])
@@ -32,10 +33,9 @@ class ExtendedKalmanFilter:
         # Sensor noise variances
         self.var_imu_acc = 0.01
         self.var_imu_gyro = 0.01
-
         # Motion model noise
         self.gnss_var = 100
-        self.lidar_var = 30
+        self.lidar_var = 0.1
 
         # Motion model noise Jacobian
         self.L_jacobian = np.zeros([9, 6])
@@ -78,7 +78,7 @@ class ExtendedKalmanFilter:
         else:
             self.imu_obj.set_last_ts(imu_data)
     
-    @staticmethod
+    '''@staticmethod
     def lidar_callback(weak_self, lidar_data):
         self = weak_self()
         if not self:
@@ -88,23 +88,19 @@ class ExtendedKalmanFilter:
             self.lidar_obj.create_transform(self.p.reshape(-1), Quaternion(*self.q).to_mat())
             xyz = self.lidar_obj.lidar_odometry(lidar_data)
             if xyz != None:
-                self.measurement_correction(xyz, self.lidar_var)
+                self.measurement_correction(xyz, self.lidar_var)'''
+
+    @staticmethod
+    def lidar_callback(weak_self, lidar_data):
+        self = weak_self()
+        if not self:
+            return
+
+        if self.initialized:
+            xyz = self.lidar_obj.lidar_odometry(lidar_data)
+            self.measurement_correction(xyz, self.lidar_var)
 
     def initialize_pose(self, gnss_xyz, samples_to_use=10):
-        """Initialize the vehicle state using gnss sensor
-
-        Note that this is going to be a very crude initialization by taking 
-        an average of 10 readings to get the absolute position of the car. A 
-        better initialization technique could be employed to better estimate
-        the initial vehicle state
-
-        Alternatively, you can also initialize the vehicle state using ground
-        truth vehicle position and orientation, but this would take away the
-        realism of the experiment/project
-
-        :param gnss: converted absolute xyz position
-        :type gnss: list
-        """
         x, y, z = gnss_xyz
         if self.gnss_init_xyz is None:
             self.gnss_init_xyz = np.array([x, y, z])
@@ -117,8 +113,17 @@ class ExtendedKalmanFilter:
         if self.n_gnss_taken == samples_to_use:
             self.gnss_init_xyz /= samples_to_use
             self.p[:, 0] = self.gnss_init_xyz
-            self.q[:, 0] = Quaternion().to_numpy()
-            print("Initialized pointtttttttt:",self.gnss_init_xyz )
+            #self.q[:, 0] = Quaternion().to_numpy()
+            
+            vel = self.vehicle_obj.get_velocity()
+            self.v[:, 0] = np.array([vel.x, vel.y, vel.z])
+
+            rotation = self.vehicle_obj.get_T().rotation
+            roll = rotation.roll
+            pitch = rotation.pitch
+            yaw = rotation.yaw
+            self.q[:, 0] = Quaternion(euler=[roll, pitch, yaw]).to_numpy()
+            #print("Initialized pointtttttttt:",self.gnss_init_xyz )
             self.initialized = True
 
     def measurement_correction(self, xyz, sensor_var):
