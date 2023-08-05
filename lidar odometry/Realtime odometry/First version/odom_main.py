@@ -72,7 +72,7 @@ class OfflineLidarOdometry():
 
             # In case Matplotlib is not able to keep up the pace of the growing queue,
             # we have to limit the rate of the items being pushed into the queue
-            visual_fps = 10
+            visual_fps = 3
             last_ts = time.time()
 
             while True:
