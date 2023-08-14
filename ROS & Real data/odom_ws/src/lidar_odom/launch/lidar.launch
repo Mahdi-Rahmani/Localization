@@ -1,0 +1,8 @@
+<launch>
+
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/mahdi/Desktop/odometry/OS1-64_city2.bag"/>
+    <node pkg="lidar_odom" type ="lidar_odometry.py" name="lidar_odo" output="screen"/>
+    <node pkg="lidar_odom" type ="monitor.py" name="monitor" output="screen"/>
+    <!-- node pkg="rviz" type="rviz" name="rviz"/-->
+
+</launch>

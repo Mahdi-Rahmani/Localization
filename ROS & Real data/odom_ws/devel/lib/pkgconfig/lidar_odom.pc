@@ -1,0 +1,8 @@
+prefix=/home/mahdi/Desktop/odometry/odom_ws/devel
+
+Name: lidar_odom
+Description: Description of lidar_odom
+Version: 0.0.0
+Cflags: -I/home/mahdi/Desktop/odometry/odom_ws/devel/include
+Libs: -L${prefix}/lib 
+Requires: nav_msgs rospy sensor_msgs std_msgs message_runtime
