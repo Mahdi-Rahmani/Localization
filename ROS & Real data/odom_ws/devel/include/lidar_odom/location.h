@@ -26,12 +26,18 @@ struct location_
   location_()
     : x(0.0)
     , y(0.0)
-    , z(0.0)  {
+    , z(0.0)
+    , roll(0.0)
+    , pitch(0.0)
+    , yaw(0.0)  {
     }
   location_(const ContainerAllocator& _alloc)
     : x(0.0)
     , y(0.0)
-    , z(0.0)  {
+    , z(0.0)
+    , roll(0.0)
+    , pitch(0.0)
+    , yaw(0.0)  {
   (void)_alloc;
     }
 
@@ -45,6 +51,15 @@ struct location_
 
    typedef double _z_type;
   _z_type z;
+
+   typedef double _roll_type;
+  _roll_type roll;
+
+   typedef double _pitch_type;
+  _pitch_type pitch;
+
+   typedef double _yaw_type;
+  _yaw_type yaw;
 
 
 
@@ -77,7 +92,10 @@ bool operator==(const ::lidar_odom::location_<ContainerAllocator1> & lhs, const 
 {
   return lhs.x == rhs.x &&
     lhs.y == rhs.y &&
-    lhs.z == rhs.z;
+    lhs.z == rhs.z &&
+    lhs.roll == rhs.roll &&
+    lhs.pitch == rhs.pitch &&
+    lhs.yaw == rhs.yaw;
 }
 
 template<typename ContainerAllocator1, typename ContainerAllocator2>
@@ -134,12 +152,12 @@ struct MD5Sum< ::lidar_odom::location_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "4a842b65f413084dc2b10fb484ea7f17";
+    return "1a83f0bdabe750ce0cfb45a14ec63457";
   }
 
   static const char* value(const ::lidar_odom::location_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x4a842b65f413084dULL;
-  static const uint64_t static_value2 = 0xc2b10fb484ea7f17ULL;
+  static const uint64_t static_value1 = 0x1a83f0bdabe750ceULL;
+  static const uint64_t static_value2 = 0x0cfb45a14ec63457ULL;
 };
 
 template<class ContainerAllocator>
@@ -161,6 +179,9 @@ struct Definition< ::lidar_odom::location_<ContainerAllocator> >
     return "float64 x\n"
 "float64 y\n"
 "float64 z\n"
+"float64 roll\n"
+"float64 pitch\n"
+"float64 yaw\n"
 ;
   }
 
@@ -182,6 +203,9 @@ namespace serialization
       stream.next(m.x);
       stream.next(m.y);
       stream.next(m.z);
+      stream.next(m.roll);
+      stream.next(m.pitch);
+      stream.next(m.yaw);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -206,6 +230,12 @@ struct Printer< ::lidar_odom::location_<ContainerAllocator> >
     Printer<double>::stream(s, indent + "  ", v.y);
     s << indent << "z: ";
     Printer<double>::stream(s, indent + "  ", v.z);
+    s << indent << "roll: ";
+    Printer<double>::stream(s, indent + "  ", v.roll);
+    s << indent << "pitch: ";
+    Printer<double>::stream(s, indent + "  ", v.pitch);
+    s << indent << "yaw: ";
+    Printer<double>::stream(s, indent + "  ", v.yaw);
   }
 };
 

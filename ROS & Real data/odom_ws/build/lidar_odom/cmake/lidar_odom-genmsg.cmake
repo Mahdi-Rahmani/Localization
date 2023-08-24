@@ -19,7 +19,7 @@ add_custom_target(lidar_odom_generate_messages ALL)
 
 get_filename_component(_filename "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg" NAME_WE)
 add_custom_target(_lidar_odom_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "lidar_odom" "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg" "std_msgs/Header"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "lidar_odom" "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg" ""
 )
 
 #
@@ -31,7 +31,7 @@ add_custom_target(_lidar_odom_generate_messages_check_deps_${_filename}
 _generate_msg_cpp(lidar_odom
   "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ""
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/lidar_odom
 )
 
@@ -64,7 +64,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS lidar_odom_generate_messages_cpp)
 _generate_msg_eus(lidar_odom
   "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ""
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/lidar_odom
 )
 
@@ -97,7 +97,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS lidar_odom_generate_messages_eus)
 _generate_msg_lisp(lidar_odom
   "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ""
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/lidar_odom
 )
 
@@ -130,7 +130,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS lidar_odom_generate_messages_lisp)
 _generate_msg_nodejs(lidar_odom
   "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ""
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/lidar_odom
 )
 
@@ -163,7 +163,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS lidar_odom_generate_messages_nodejs
 _generate_msg_py(lidar_odom
   "/home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ""
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/lidar_odom
 )
 

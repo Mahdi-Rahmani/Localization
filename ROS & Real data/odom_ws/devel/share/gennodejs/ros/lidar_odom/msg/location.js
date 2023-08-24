@@ -21,6 +21,9 @@ class location {
       this.x = null;
       this.y = null;
       this.z = null;
+      this.roll = null;
+      this.pitch = null;
+      this.yaw = null;
     }
     else {
       if (initObj.hasOwnProperty('x')) {
@@ -41,6 +44,24 @@ class location {
       else {
         this.z = 0.0;
       }
+      if (initObj.hasOwnProperty('roll')) {
+        this.roll = initObj.roll
+      }
+      else {
+        this.roll = 0.0;
+      }
+      if (initObj.hasOwnProperty('pitch')) {
+        this.pitch = initObj.pitch
+      }
+      else {
+        this.pitch = 0.0;
+      }
+      if (initObj.hasOwnProperty('yaw')) {
+        this.yaw = initObj.yaw
+      }
+      else {
+        this.yaw = 0.0;
+      }
     }
   }
 
@@ -52,6 +73,12 @@ class location {
     bufferOffset = _serializer.float64(obj.y, buffer, bufferOffset);
     // Serialize message field [z]
     bufferOffset = _serializer.float64(obj.z, buffer, bufferOffset);
+    // Serialize message field [roll]
+    bufferOffset = _serializer.float64(obj.roll, buffer, bufferOffset);
+    // Serialize message field [pitch]
+    bufferOffset = _serializer.float64(obj.pitch, buffer, bufferOffset);
+    // Serialize message field [yaw]
+    bufferOffset = _serializer.float64(obj.yaw, buffer, bufferOffset);
     return bufferOffset;
   }
 
@@ -65,11 +92,17 @@ class location {
     data.y = _deserializer.float64(buffer, bufferOffset);
     // Deserialize message field [z]
     data.z = _deserializer.float64(buffer, bufferOffset);
+    // Deserialize message field [roll]
+    data.roll = _deserializer.float64(buffer, bufferOffset);
+    // Deserialize message field [pitch]
+    data.pitch = _deserializer.float64(buffer, bufferOffset);
+    // Deserialize message field [yaw]
+    data.yaw = _deserializer.float64(buffer, bufferOffset);
     return data;
   }
 
   static getMessageSize(object) {
-    return 24;
+    return 48;
   }
 
   static datatype() {
@@ -79,7 +112,7 @@ class location {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '4a842b65f413084dc2b10fb484ea7f17';
+    return '1a83f0bdabe750ce0cfb45a14ec63457';
   }
 
   static messageDefinition() {
@@ -88,6 +121,9 @@ class location {
     float64 x
     float64 y
     float64 z
+    float64 roll
+    float64 pitch
+    float64 yaw
     `;
   }
 
@@ -116,6 +152,27 @@ class location {
     }
     else {
       resolved.z = 0.0
+    }
+
+    if (msg.roll !== undefined) {
+      resolved.roll = msg.roll;
+    }
+    else {
+      resolved.roll = 0.0
+    }
+
+    if (msg.pitch !== undefined) {
+      resolved.pitch = msg.pitch;
+    }
+    else {
+      resolved.pitch = 0.0
+    }
+
+    if (msg.yaw !== undefined) {
+      resolved.yaw = msg.yaw;
+    }
+    else {
+      resolved.yaw = 0.0
     }
 
     return resolved;

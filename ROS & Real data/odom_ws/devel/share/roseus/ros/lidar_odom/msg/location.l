@@ -14,7 +14,7 @@
 
 (defclass lidar_odom::location
   :super ros::object
-  :slots (_x _y _z ))
+  :slots (_x _y _z _roll _pitch _yaw ))
 
 (defmethod lidar_odom::location
   (:init
@@ -22,11 +22,17 @@
     ((:x __x) 0.0)
     ((:y __y) 0.0)
     ((:z __z) 0.0)
+    ((:roll __roll) 0.0)
+    ((:pitch __pitch) 0.0)
+    ((:yaw __yaw) 0.0)
     )
    (send-super :init)
    (setq _x (float __x))
    (setq _y (float __y))
    (setq _z (float __z))
+   (setq _roll (float __roll))
+   (setq _pitch (float __pitch))
+   (setq _yaw (float __yaw))
    self)
   (:x
    (&optional __x)
@@ -37,6 +43,15 @@
   (:z
    (&optional __z)
    (if __z (setq _z __z)) _z)
+  (:roll
+   (&optional __roll)
+   (if __roll (setq _roll __roll)) _roll)
+  (:pitch
+   (&optional __pitch)
+   (if __pitch (setq _pitch __pitch)) _pitch)
+  (:yaw
+   (&optional __yaw)
+   (if __yaw (setq _yaw __yaw)) _yaw)
   (:serialization-length
    ()
    (+
@@ -45,6 +60,12 @@
     ;; float64 _y
     8
     ;; float64 _z
+    8
+    ;; float64 _roll
+    8
+    ;; float64 _pitch
+    8
+    ;; float64 _yaw
     8
     ))
   (:serialize
@@ -57,6 +78,12 @@
        (sys::poke _y (send s :buffer) (send s :count) :double) (incf (stream-count s) 8)
      ;; float64 _z
        (sys::poke _z (send s :buffer) (send s :count) :double) (incf (stream-count s) 8)
+     ;; float64 _roll
+       (sys::poke _roll (send s :buffer) (send s :count) :double) (incf (stream-count s) 8)
+     ;; float64 _pitch
+       (sys::poke _pitch (send s :buffer) (send s :count) :double) (incf (stream-count s) 8)
+     ;; float64 _yaw
+       (sys::poke _yaw (send s :buffer) (send s :count) :double) (incf (stream-count s) 8)
      ;;
      (if (null strm) (get-output-stream-string s))))
   (:deserialize
@@ -67,20 +94,29 @@
      (setq _y (sys::peek buf ptr- :double)) (incf ptr- 8)
    ;; float64 _z
      (setq _z (sys::peek buf ptr- :double)) (incf ptr- 8)
+   ;; float64 _roll
+     (setq _roll (sys::peek buf ptr- :double)) (incf ptr- 8)
+   ;; float64 _pitch
+     (setq _pitch (sys::peek buf ptr- :double)) (incf ptr- 8)
+   ;; float64 _yaw
+     (setq _yaw (sys::peek buf ptr- :double)) (incf ptr- 8)
    ;;
    self)
   )
 
-(setf (get lidar_odom::location :md5sum-) "4a842b65f413084dc2b10fb484ea7f17")
+(setf (get lidar_odom::location :md5sum-) "1a83f0bdabe750ce0cfb45a14ec63457")
 (setf (get lidar_odom::location :datatype-) "lidar_odom/location")
 (setf (get lidar_odom::location :definition-)
       "float64 x
 float64 y
 float64 z
+float64 roll
+float64 pitch
+float64 yaw
 ")
 
 
 
-(provide :lidar_odom/location "4a842b65f413084dc2b10fb484ea7f17")
+(provide :lidar_odom/location "1a83f0bdabe750ce0cfb45a14ec63457")
 
 

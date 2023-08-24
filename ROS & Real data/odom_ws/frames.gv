@@ -1,0 +1,10 @@
+digraph G {
+"os_sensor" -> "os_lidar"[label="Broadcaster: /player\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1693646276.023 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "os_sensor"[label="Broadcaster: /lidar_odo\nAverage rate: 10.234 Hz\nMost recent transform: 1693646275.950 ( 0.073 sec old)\nBuffer length: 4.885 sec\n"];
+"os_sensor" -> "os_imu"[label="Broadcaster: /player\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1693646276.023 sec old)\nBuffer length: 0.000 sec\n"];
+"world" -> "base_link"[label="Broadcaster: /vis\nAverage rate: 10.193 Hz\nMost recent transform: 1693646276.001 ( 0.022 sec old)\nBuffer length: 4.905 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1693646276.023"[ shape=plaintext ] ;
+ }->"world";
+}

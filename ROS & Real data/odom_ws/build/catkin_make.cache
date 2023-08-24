@@ -1,2 +1,2 @@
-lidar_odom
+lidar_odom:octomap_mapping/octomap_mapping:octomap_mapping/octomap_server
 -DCATKIN_DEVEL_PREFIX=/home/mahdi/Desktop/odometry/odom_ws/devel -DCMAKE_INSTALL_PREFIX=/home/mahdi/Desktop/odometry/odom_ws/install -G Unix Makefiles

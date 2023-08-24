@@ -1,8 +1,15 @@
 <launch>
+    <!-- Load the RViz configuration file -->
+    <arg name="rviz_config" default="/home/mahdi/Desktop/odometry/config.rviz"/>
 
-    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/mahdi/Desktop/odometry/OS1-64_city2.bag"/>
+    <!-- Launch RViz with the specified configuration -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)" output="screen"/>
+    <!-- node pkg="rviz" type="rviz" name="rviz"/-->
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/mahdi/Desktop/odometry/finalCloud.bag"/>
+    <node pkg="lidar_odom" type ="vis.py" name="vis" output="screen"/>
     <node pkg="lidar_odom" type ="lidar_odometry.py" name="lidar_odo" output="screen"/>
     <node pkg="lidar_odom" type ="monitor.py" name="monitor" output="screen"/>
-    <!-- node pkg="rviz" type="rviz" name="rviz"/-->
+
+    <include file="$(find octomap_server)/launch/octomap_mapping.launch" />
 
 </launch>

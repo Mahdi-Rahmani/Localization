@@ -452,20 +452,6 @@ actionlib_msgs_generate_messages_py/fast:
 .PHONY : actionlib_msgs_generate_messages_py/fast
 
 # Convenience name for target.
-lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/rule:
-	cd /home/mahdi/Desktop/odometry/odom_ws/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/rule
-.PHONY : lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/rule
-
-# Convenience name for target.
-_catkin_empty_exported_target: lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/rule
-.PHONY : _catkin_empty_exported_target
-
-# fast build rule for target.
-_catkin_empty_exported_target/fast:
-	cd /home/mahdi/Desktop/odometry/odom_ws/build && $(MAKE) $(MAKESILENT) -f lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/build.make lidar_odom/CMakeFiles/_catkin_empty_exported_target.dir/build
-.PHONY : _catkin_empty_exported_target/fast
-
-# Convenience name for target.
 lidar_odom/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule:
 	cd /home/mahdi/Desktop/odometry/odom_ws/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lidar_odom/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
 .PHONY : lidar_odom/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
@@ -716,7 +702,6 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... _catkin_empty_exported_target"
 	@echo "... _lidar_odom_generate_messages_check_deps_location"
 	@echo "... actionlib_msgs_generate_messages_cpp"
 	@echo "... actionlib_msgs_generate_messages_eus"

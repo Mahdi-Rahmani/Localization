@@ -67,7 +67,7 @@ include lidar_odom/CMakeFiles/_lidar_odom_generate_messages_check_deps_location.
 include lidar_odom/CMakeFiles/_lidar_odom_generate_messages_check_deps_location.dir/progress.make
 
 lidar_odom/CMakeFiles/_lidar_odom_generate_messages_check_deps_location:
-	cd /home/mahdi/Desktop/odometry/odom_ws/build/lidar_odom && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py lidar_odom /home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg std_msgs/Header
+	cd /home/mahdi/Desktop/odometry/odom_ws/build/lidar_odom && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py lidar_odom /home/mahdi/Desktop/odometry/odom_ws/src/lidar_odom/msg/location.msg 
 
 _lidar_odom_generate_messages_check_deps_location: lidar_odom/CMakeFiles/_lidar_odom_generate_messages_check_deps_location
 _lidar_odom_generate_messages_check_deps_location: lidar_odom/CMakeFiles/_lidar_odom_generate_messages_check_deps_location.dir/build.make
