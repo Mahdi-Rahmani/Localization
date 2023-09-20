@@ -144,7 +144,7 @@ class LIDAR:
             self.T2 = T3
             pose = np.ndarray.tolist(T3[:3,-1])
             #pose[2] = random.uniform(-0.1, 0.1)
-            pose[2] = pose[2]-1.8
+            pose[2] = (pose[2]-1.8)/50
             return pose
     
     def filter_points_fast(self, points_array):

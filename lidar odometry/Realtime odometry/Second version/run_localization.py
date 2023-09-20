@@ -66,8 +66,8 @@ def main():
         vehicle_obj.set_autopilot_status(True)
         # Drive the car around and get sensor readings
         while True:
-            time.sleep(0.005)
             world.tick()
+            time.sleep(0.005)
             #frame = world.get_snapshot().frame        
 
             # Limit the visualization frame-rate
